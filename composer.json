@@ -1,0 +1,27 @@
+{
+    "name": "holgerk/assert-golden",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "phpunit",
+        "xunit",
+        "testing"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Holgerk\\AssertGolden\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Holger Kohnen",
+            "email": "h.kohnen@gmail.com"
+        }
+    ],
+    "require": {
+        "phpunit/phpunit": "^10.4",
+        "nikic/php-parser": "^4.17",
+        "symfony/var-exporter": "^6.3"
+    },
+    "version": "1.0.0"
+}
