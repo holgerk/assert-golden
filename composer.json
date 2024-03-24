@@ -12,6 +12,11 @@
             "Holgerk\\AssertGolden\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Holgerk\\AssertGolden\\Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "Holger Kohnen",
