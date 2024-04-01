@@ -24,9 +24,8 @@
         }
     ],
     "require": {
-        "phpunit/phpunit": "^10.4",
-        "nikic/php-parser": "^4.17",
-        "symfony/var-exporter": "^6.3"
-    },
-    "version": "1.0.0"
+        "php": "^8.2",
+        "nikic/php-parser": "^5.0",
+        "symfony/var-exporter": "^7.0"
+    }
 }
