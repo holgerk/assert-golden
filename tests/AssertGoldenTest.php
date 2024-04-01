@@ -2,6 +2,7 @@
 
 namespace Holgerk\AssertGolden\Tests;
 
+use Holgerk\AssertGolden\Insertion;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -20,6 +21,7 @@ class AssertGoldenTest extends TestCase
     {
         $example = new TestFile();
         $example->test();
+        Insertion::writeAndResetInsertions();
         self::assertFileEquals(
             __DIR__ . '/TestFile.expected.php',
             __DIR__ . '/TestFile.php'
