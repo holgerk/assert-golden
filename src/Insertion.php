@@ -4,6 +4,7 @@ namespace Holgerk\AssertGolden;
 
 use PhpParser\Node;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NodeConnectingVisitor;
@@ -15,12 +16,15 @@ final class Insertion
     /** @var Insertion[] */
     private static array $insertions = [];
 
+    public static bool $forceGoldenUpdate = false;
+
     public static function register(string $replacement): void
     {
         $filePath = null;
         $lineToFind = null;
         foreach (debug_backtrace() as $stackItem) {
-            if (($stackItem['function'] ?? '') === 'assertGolden') {
+            $function = ($stackItem['function'] ?? '');
+            if ($function === 'assertGolden' || $function === 'Holgerk\\AssertGolden\\assertGolden') {
                 $filePath = $stackItem['file'];
                 $lineToFind = $stackItem['line'];
                 break;
@@ -36,10 +40,13 @@ final class Insertion
         (new NodeTraverser(new NodeConnectingVisitor))->traverse($ast);
 
         $nodeFinder = new NodeFinder();
-        $node = $nodeFinder->findFirst($ast, fn (Node $node): bool => $node instanceof Identifier
-            && $node->name === 'assertGolden'
-            && $node->getStartLine() === $lineToFind
-            && $node->getEndLine() === $lineToFind);
+        $node = $nodeFinder->findFirst($ast, function (Node $node) use($lineToFind) : bool {
+            return
+                ($node instanceof Identifier || $node instanceof Name)
+                && $node->name === 'assertGolden'
+                && $node->getStartLine() === $lineToFind
+                && $node->getEndLine() === $lineToFind;
+        });
         /** @var Node $argumentNode */
         $argumentNode = $node->getAttribute('next');
 

@@ -2,12 +2,16 @@
 
 namespace Holgerk\AssertGolden\Tests;
 
+use Holgerk\AssertGolden\AssertGolden;
 use Holgerk\AssertGolden\Insertion;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use function PHPUnit\Framework\assertEquals;
 
 class AssertGoldenTest extends TestCase
 {
+    use AssertGolden;
+
     public function tearDown(): void
     {
         copy(
@@ -27,6 +31,5 @@ class AssertGoldenTest extends TestCase
             __DIR__ . '/TestFile.php'
         );
     }
-
 
 }
