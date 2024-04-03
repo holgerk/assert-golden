@@ -4,7 +4,7 @@ namespace Holgerk\AssertGolden\Tests;
 
 use Holgerk\AssertGolden\AssertGolden;
 
-class TestFile
+class StaticCall
 {
     use AssertGolden;
 

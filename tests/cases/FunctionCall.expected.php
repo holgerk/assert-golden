@@ -2,15 +2,13 @@
 
 namespace Holgerk\AssertGolden\Tests;
 
-use Holgerk\AssertGolden\AssertGolden;
+use function Holgerk\AssertGolden\assertGolden;
 
-class TestFile
+class FunctionCall
 {
-    use AssertGolden;
-
     public function test(): void
     {
-        self::assertGolden(
+        assertGolden(
             [
                 'a' => 1,
                 'b' => 2,

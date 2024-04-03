@@ -2,34 +2,38 @@
 
 namespace Holgerk\AssertGolden\Tests;
 
-use Holgerk\AssertGolden\AssertGolden;
 use Holgerk\AssertGolden\Insertion;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use function PHPUnit\Framework\assertEquals;
 
 class AssertGoldenTest extends TestCase
 {
-    use AssertGolden;
-
-    public function tearDown(): void
+    public static function casesDataProvider(): array
     {
-        copy(
-            __DIR__ . '/TestFile.before.php',
-            __DIR__ . '/TestFile.php'
-        );
+        return [
+            'StaticCall' => ['case' => 'StaticCall'],
+            'MethodCall' => ['case' => 'MethodCall'],
+            'FunctionCall' => ['case' => 'FunctionCall'],
+        ];
     }
 
-    #[Test]
-    public function file_is_changed(): void
+    #[Test, DataProvider('casesDataProvider')]
+    public function file_is_changed(string $case): void
     {
-        $example = new TestFile();
+        $dir = __DIR__ . '/cases';
+        $beforeFile = $dir . '/' . $case . '.before.php';
+        $expectedFile = $dir . '/' . $case . '.expected.php';
+        $testFile = $dir . '/' . $case . '.test.php';
+        copy($beforeFile, $testFile);
+        include $testFile;
+
+        $class = 'Holgerk\\AssertGolden\\Tests\\' . $case;
+        $example = new $class();
         $example->test();
         Insertion::writeAndResetInsertions();
-        self::assertFileEquals(
-            __DIR__ . '/TestFile.expected.php',
-            __DIR__ . '/TestFile.php'
-        );
+
+        self::assertFileEquals($expectedFile, $testFile);
     }
 
 }

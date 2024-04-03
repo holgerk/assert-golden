@@ -3,3 +3,4 @@ vendor
 .phpunit.result.cache
 composer.lock
 .phpunit.cache
+tests/cases/*.test.php

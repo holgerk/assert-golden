@@ -4,13 +4,13 @@ namespace Holgerk\AssertGolden\Tests;
 
 use Holgerk\AssertGolden\AssertGolden;
 
-class TestFile
+class MethodCall
 {
     use AssertGolden;
 
     public function test(): void
     {
-        self::assertGolden(
+        $this->assertGolden(
             null,
             ['a' => 1, 'b' => 2]
         );
