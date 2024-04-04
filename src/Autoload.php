@@ -13,13 +13,17 @@ if ($index !== false) {
     array_splice($_SERVER['argv'], $index, 1);
 }
 
-function assertGolden(mixed $expected, mixed $actual, $message = ''): void
+/**
+ * Same as assertEquals, but if null is passed as expectation, null is automatically replaced with
+ * the actual value
+ */
+function assertGolden(mixed $expected, mixed $actual, string $message = ''): void
 {
     _internalAssertGolden($expected, $actual, $message);
 }
 
 /** @internal */
-function _internalAssertGolden(mixed $expected, mixed $actual, $message = ''): void
+function _internalAssertGolden(mixed $expected, mixed $actual, string $message = ''): void
 {
     if ($expected === null || Insertion::$forceGoldenUpdate) {
         $expected = $actual;

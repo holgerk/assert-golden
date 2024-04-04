@@ -2,6 +2,7 @@
 
 namespace Holgerk\AssertGolden;
 
+use LogicException;
 use PhpParser\Node;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
@@ -54,6 +55,7 @@ final class Insertion
             $filePath,
             $argumentNode->getStartFilePos(),
             $argumentNode->getEndFilePos(),
+            $lineToFind,
             $replacement
         );
 
@@ -76,6 +78,13 @@ final class Insertion
         usort($insertions, function (Insertion $a, Insertion $b): int {
             if ($a->file !== $b->file) {
                 return $a->file <=> $b->file;
+            }
+
+            if ($a->lineNumber === $b->lineNumber) {
+                throw new LogicException(
+                    "Could not process multiple automatic replacement on the same line, see:\n"
+                    . "  file: $b->file and line: $b->lineNumber"
+                );
             }
 
             return $b->startPos <=> $a->startPos;
@@ -139,6 +148,7 @@ final class Insertion
         public string $file,
         public int $startPos,
         public int $endPos,
+        public int $lineNumber,
         public string $replacement,
     ) {
     }

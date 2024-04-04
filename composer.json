@@ -1,5 +1,6 @@
 {
     "name": "holgerk/assert-golden",
+    "description": "Same as assertEquals, but if null is passed as expectation, null is automatically replaced with the actual value",
     "type": "library",
     "license": "MIT",
     "keywords": [

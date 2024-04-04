@@ -6,6 +6,7 @@ use Holgerk\AssertGolden\Insertion;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use function Holgerk\AssertGolden\assertGolden;
 
 class AssertGoldenTest extends TestCase
 {
@@ -35,5 +36,4 @@ class AssertGoldenTest extends TestCase
 
         self::assertFileEquals($expectedFile, $testFile);
     }
-
 }
