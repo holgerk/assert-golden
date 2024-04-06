@@ -32,5 +32,8 @@
         "nikic/php-parser": "^5.0",
         "symfony/var-exporter": "^7.0",
         "phpunit/phpunit": "^9||^10||^11"
+    },
+    "scripts": {
+        "test:unit": "phpunit"
     }
 }
