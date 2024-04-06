@@ -19,7 +19,10 @@ class AssertGoldenTest extends TestCase
         ];
     }
 
-    #[Test, DataProvider('casesDataProvider')]
+    /**
+     * @test
+     * @dataProvider casesDataProvider
+     */
     public function file_is_changed(string $case): void
     {
         $dir = __DIR__ . '/cases';

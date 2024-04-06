@@ -31,9 +31,9 @@
         "php": "^8.2",
         "nikic/php-parser": "^5.0",
         "symfony/var-exporter": "^7.0",
-        "phpunit/phpunit": "^9||^10||^11"
+        "phpunit/phpunit": "^8||^9||^10||^11"
     },
     "scripts": {
-        "test:unit": "phpunit"
+        "test:unit": "phpunit tests"
     }
 }
