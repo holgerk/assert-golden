@@ -1,7 +1,7 @@
 # assertGolden Assertion
 
-Same as assertEquals, but if null is passed as expectation, null is automatically replaced with
-the actual value.
+Same as `toEqual`, but when `null` is given as argument, the test file is automatically edited and `null` 
+is substituted with the actual value
 
 Given the following code:
 ```php
