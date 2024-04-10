@@ -29,9 +29,10 @@
     ],
     "require": {
         "php": "^8.2",
-        "nikic/php-parser": "^5",
+        "nikic/php-parser": "^4.16||^5",
         "symfony/var-exporter": "^4||^5||^6||^7",
-        "phpunit/phpunit": "^8||^9||^10||^11"
+        "phpunit/phpunit": "^8||^9||^10||^11",
+        "composer-runtime-api": "*"
     },
     "scripts": {
         "test:unit": "phpunit tests"

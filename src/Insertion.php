@@ -2,7 +2,9 @@
 
 namespace Holgerk\AssertGolden;
 
+use Composer\InstalledVersions;
 use LogicException;
+use PhpParser\Lexer\Emulative;
 use PhpParser\Node;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
@@ -33,21 +35,49 @@ final class Insertion
         }
         assert((bool) $filePath);
 
-        $parser = (new ParserFactory())->createForHostVersion();
+        $chunks = explode('.', InstalledVersions::getVersion('nikic/php-parser'));
+        $majorVersion = $chunks[0];
+
+        $parser = $majorVersion === '4'
+            ? (new ParserFactory())->create(
+                ParserFactory::PREFER_PHP7,
+                new Emulative(['usedAttributes' => ['startLine', 'endLine', 'startFilePos', 'endFilePos']]))
+            : (new ParserFactory())->createForHostVersion();
         $fileContent = file_get_contents($filePath);
         $ast = $parser->parse($fileContent);
 
-        // connect sibling nodes (see: https://github.com/nikic/PHP-Parser/blob/master/doc/component/FAQ.markdown)
-        (new NodeTraverser(new NodeConnectingVisitor))->traverse($ast);
+        if ($majorVersion === '4') {
+            // see: https://github.com/nikic/PHP-Parser/blob/4.x/doc/component/FAQ.markdown
+            $traverser = new NodeTraverser;
+            $traverser->addVisitor(new NodeConnectingVisitor);
+            $traverser->traverse($ast);
+        } else {
+            // see: https://github.com/nikic/PHP-Parser/blob/master/doc/component/FAQ.markdown
+            (new NodeTraverser(new NodeConnectingVisitor))->traverse($ast);
+        }
 
         $nodeFinder = new NodeFinder();
-        $node = $nodeFinder->findFirst($ast, function (Node $node) use($lineToFind) : bool {
+        $node = $nodeFinder->findFirst($ast, function (Node $node) use($lineToFind, $majorVersion) : bool {
+            if ($majorVersion === '4') {
+                return
+                    (
+                        // match method or static call
+                        ($node instanceof Identifier && $node->name === 'assertGolden')
+                        ||
+                        // match function call
+                        ($node instanceof Name && $node->getParts()[0] === 'assertGolden')
+                    )
+                    && $node->getStartLine() === $lineToFind
+                    && $node->getEndLine() === $lineToFind;
+            }
             return
                 ($node instanceof Identifier || $node instanceof Name)
                 && $node->name === 'assertGolden'
                 && $node->getStartLine() === $lineToFind
                 && $node->getEndLine() === $lineToFind;
         });
+        assert($node !== null);
+
         /** @var Node $argumentNode */
         $argumentNode = $node->getAttribute('next');
 
