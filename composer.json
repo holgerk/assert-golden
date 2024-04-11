@@ -29,6 +29,7 @@
     ],
     "require": {
         "php": "^8.2",
+        "ext-posix": "*",
         "nikic/php-parser": "^4.16||^5",
         "symfony/var-exporter": "^4||^5||^6||^7",
         "phpunit/phpunit": "^8||^9||^10||^11",

@@ -16,10 +16,11 @@ use PhpParser\ParserFactory;
 /** @internal */
 final class Insertion
 {
-    /** @var Insertion[] */
+    /** @var array<int, Insertion[]> */
     private static array $insertions = [];
 
     public static bool $forceGoldenUpdate = false;
+    public static bool $verbose = true;
 
     public static function register(string $replacement): void
     {
@@ -81,7 +82,7 @@ final class Insertion
         /** @var Node $argumentNode */
         $argumentNode = $node->getAttribute('next');
 
-        self::$insertions[] = new self(
+        self::$insertions[posix_getpid()][] = new self(
             $filePath,
             $argumentNode->getStartFilePos(),
             $argumentNode->getEndFilePos(),
@@ -101,8 +102,18 @@ final class Insertion
 
     public static function writeAndResetInsertions(): void
     {
-        $insertions = self::$insertions;
-        self::$insertions = [];
+        // only write and reset insertions from this process
+        // (every forked process will have and execute the registered shutdown function)
+        $insertions = self::$insertions[posix_getpid()] ?? [];
+        self::$insertions[posix_getpid()] = [];
+
+        if (empty($insertions)) {
+            return;
+        }
+
+        self::output(PHP_EOL);
+        self::output('assertGolden | Writing insertions' . PHP_EOL);
+        self::output('assertGolden | ==================' . PHP_EOL);
 
         // arrange insertions starting from the end of the file to prevent disrupting the positions during replacements
         usort($insertions, function (Insertion $a, Insertion $b): int {
@@ -120,14 +131,16 @@ final class Insertion
             return $b->startPos <=> $a->startPos;
         });
 
+        // process all insertion in the context of the corresponding file
+        /** @var array<string, Insertion[]> $insertionsByFile */
         $insertionsByFile = [];
         foreach ($insertions as $insertion) {
             $insertionsByFile[$insertion->file][] = $insertion;
         }
 
         foreach ($insertionsByFile as $file => $insertions) {
+            self::output('assertGolden | reading: ' . $file . PHP_EOL);
             $content = file_get_contents($file);
-            assert(!empty($content));
             foreach ($insertions as $insertion) {
                 $indent = self::getIndent($insertion->startPos, $content);
 
@@ -137,6 +150,7 @@ final class Insertion
                 $replacement = implode("\n$indent", $replacementLines);
 
                 // insert expectation
+                self::output('assertGolden | update assertion at line: ' . $insertion->lineNumber . PHP_EOL);
                 $content = substr_replace(
                     $content,
                     $replacement,
@@ -144,6 +158,7 @@ final class Insertion
                     $insertion->endPos - $insertion->startPos + 1
                 );
             }
+            self::output('assertGolden | writing: ' . $file . PHP_EOL);
             file_put_contents($file, $content);
         }
     }
@@ -189,5 +204,13 @@ final class Insertion
         public int $lineNumber,
         public string $replacement,
     ) {
+    }
+
+    private static function output(string $message): void
+    {
+        if (! self::$verbose) {
+            return;
+        }
+        echo $message;
     }
 }
