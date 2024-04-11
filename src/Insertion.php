@@ -120,23 +120,31 @@ final class Insertion
             return $b->startPos <=> $a->startPos;
         });
 
+        $insertionsByFile = [];
         foreach ($insertions as $insertion) {
-            $content = file_get_contents($insertion->file);
-            $indent = self::getIndent($insertion->startPos, $content);
+            $insertionsByFile[$insertion->file][] = $insertion;
+        }
 
-            // add indention
-            $replacement = $insertion->replacement;
-            $replacementLines = explode("\n", $replacement);
-            $replacement = implode("\n$indent", $replacementLines);
+        foreach ($insertionsByFile as $file => $insertions) {
+            $content = file_get_contents($file);
+            assert(!empty($content));
+            foreach ($insertions as $insertion) {
+                $indent = self::getIndent($insertion->startPos, $content);
 
-            // insert expectation
-            $content = substr_replace(
-                $content,
-                $replacement,
-                $insertion->startPos,
-                $insertion->endPos - $insertion->startPos + 1
-            );
-            file_put_contents($insertion->file, $content);
+                // add indention
+                $replacement = $insertion->replacement;
+                $replacementLines = explode("\n", $replacement);
+                $replacement = implode("\n$indent", $replacementLines);
+
+                // insert expectation
+                $content = substr_replace(
+                    $content,
+                    $replacement,
+                    $insertion->startPos,
+                    $insertion->endPos - $insertion->startPos + 1
+                );
+            }
+            file_put_contents($file, $content);
         }
     }
 
