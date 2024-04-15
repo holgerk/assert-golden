@@ -41,10 +41,12 @@ first test run.
 ### Trait Usage
 
 ```php
-use Holgerk\AssertGolden\AssertGolden;
+use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
-class ExampleTest
+use Holgerk\AssertGolden\AssertGolden;
+
+class ExampleTest extends TestCase
 {
     use AssertGolden;
 
@@ -69,10 +71,12 @@ class ExampleTest
 ### Function Usage
 
 ```php
-use function Holgerk\AssertGolden\assertGolden;
+use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 
-class ExampleTest
+use function Holgerk\AssertGolden\assertGolden;
+
+class ExampleTest extends TestCase
 {
     #[Test]
     public function test(): void
