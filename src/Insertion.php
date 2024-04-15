@@ -35,6 +35,16 @@ final class Insertion
             }
         }
         assert((bool) $filePath);
+        if (PHP_MAJOR_VERSION === 8 && PHP_MINOR_VERSION === 1) {
+            // in php 8.1 and lower debug_backtrace reports the line of the closing parenthesis of the assertGolden call
+            // so we need to find the line of the call
+            $lines = file($filePath);
+            while (! str_contains($lines[$lineToFind], 'assertGolden')) {
+                $lineToFind--;
+            }
+            // convert to 1-based line-numbers
+            $lineToFind += 1;
+        }
 
         $chunks = explode('.', InstalledVersions::getVersion('nikic/php-parser'));
         $majorVersion = $chunks[0];
