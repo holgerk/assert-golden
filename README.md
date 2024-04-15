@@ -1,5 +1,11 @@
 # assertGolden Assertion
 
+![GitHub Release](https://img.shields.io/github/v/release/holgerk/assert-golden)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/holgerk/assert-golden/tests.yml)
+![Packagist Downloads](https://img.shields.io/packagist/dt/holgerk/assert-golden)
+
+
+
 Same as `toEqual`, but when `null` is given as argument, the test file is automatically edited and `null` 
 is substituted with the actual value
 
