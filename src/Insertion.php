@@ -92,7 +92,7 @@ final class Insertion
         /** @var Node $argumentNode */
         $argumentNode = $node->getAttribute('next');
 
-        self::$insertions[posix_getpid()][] = new self(
+        self::$insertions[self::getProcessId()][] = new self(
             $filePath,
             $argumentNode->getStartFilePos(),
             $argumentNode->getEndFilePos(),
@@ -101,20 +101,15 @@ final class Insertion
         );
 
         if (count(self::$insertions) === 1) {
-            register_shutdown_function(self::class . '::shutdown');
+            register_shutdown_function(self::class . '::writeAndResetInsertions');
         }
-    }
-
-    public static function shutdown(): void
-    {
-        self::writeAndResetInsertions();
     }
 
     public static function writeAndResetInsertions(): void
     {
         // only write and reset insertions from this process
         // (every forked process will have and execute the registered shutdown function)
-        $insertions = self::$insertions[posix_getpid()] ?? [];
+        $insertions = self::$insertions[self::getProcessId()] ?? [];
         self::$insertions[posix_getpid()] = [];
 
         if (empty($insertions)) {
@@ -222,5 +217,10 @@ final class Insertion
             return;
         }
         echo $message;
+    }
+
+    private static function getProcessId(): int
+    {
+        return getmypid();
     }
 }
