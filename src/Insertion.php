@@ -19,7 +19,7 @@ final class Insertion
     /** @var array<int, Insertion[]> */
     private static array $insertions = [];
 
-    public static bool $forceGoldenUpdate = false;
+    public static bool $forceUpdateGolden = false;
     public static bool $verbose = true;
 
     public static function register(string $replacement): void

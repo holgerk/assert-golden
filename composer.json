@@ -1,6 +1,6 @@
 {
     "name": "holgerk/assert-golden",
-    "description": "Same as toEqual, but when null is given as argument, the test file is automatically edited and null is substituted with the actual value",
+    "description": "Same as assertEquals, but when null is given as argument, the test file is automatically edited and null is substituted with the actual value",
     "type": "library",
     "license": "MIT",
     "keywords": [

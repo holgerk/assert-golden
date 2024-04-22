@@ -6,7 +6,7 @@
 
 
 
-Same as `toEqual`, but when `null` is given as argument, the test file is automatically edited and `null` 
+Same as `assertEquals`, but when `null` is given as argument, the test file is automatically edited and `null` 
 is substituted with the actual value
 
 Given the following code:
@@ -41,7 +41,7 @@ composer require holgerk/assert-golden --dev
 
 ## Usage
 
-Just pass `null` to the `toEqualGolden` expectation and `null` will be automatically replaced during the
+Just pass `null` to the `assertGolden` expectation and `null` will be automatically replaced during the
 first test run.
 
 ### Trait Usage
