@@ -24,10 +24,12 @@ final class Insertion
 
     public static function register(string $replacement): void
     {
+        // find line and file path of assertGolden call...
         $filePath = null;
         $lineToFind = null;
         foreach (debug_backtrace() as $stackItem) {
             $function = ($stackItem['function'] ?? '');
+            // ...either from trait or imported function
             if ($function === 'assertGolden' || $function === 'Holgerk\\AssertGolden\\assertGolden') {
                 $filePath = $stackItem['file'];
                 $lineToFind = $stackItem['line'];
@@ -35,67 +37,18 @@ final class Insertion
             }
         }
         assert((bool) $filePath);
+
         if (PHP_MAJOR_VERSION === 8 && PHP_MINOR_VERSION === 1) {
-            // in php 8.1 and lower debug_backtrace reports the line of the closing parenthesis of the assertGolden call
-            // so we need to find the line of the call
-            $lines = file($filePath);
-            while (! str_contains($lines[$lineToFind], 'assertGolden')) {
-                $lineToFind--;
-            }
-            // convert to 1-based line-numbers
-            $lineToFind += 1;
+            $lineToFind = self::fixLineToFindForPhp81($filePath, $lineToFind);
         }
 
-        $chunks = explode('.', InstalledVersions::getVersion('nikic/php-parser'));
-        $majorVersion = $chunks[0];
+        $nullArgumentNode = self::getNullArgumentNode($filePath, $lineToFind);
 
-        $parser = $majorVersion === '4'
-            ? (new ParserFactory())->create(
-                ParserFactory::PREFER_PHP7,
-                new Emulative(['usedAttributes' => ['startLine', 'endLine', 'startFilePos', 'endFilePos']]))
-            : (new ParserFactory())->createForHostVersion();
-        $fileContent = file_get_contents($filePath);
-        $ast = $parser->parse($fileContent);
-
-        if ($majorVersion === '4') {
-            // see: https://github.com/nikic/PHP-Parser/blob/4.x/doc/component/FAQ.markdown
-            $traverser = new NodeTraverser;
-            $traverser->addVisitor(new NodeConnectingVisitor);
-            $traverser->traverse($ast);
-        } else {
-            // see: https://github.com/nikic/PHP-Parser/blob/master/doc/component/FAQ.markdown
-            (new NodeTraverser(new NodeConnectingVisitor))->traverse($ast);
-        }
-
-        $nodeFinder = new NodeFinder();
-        $node = $nodeFinder->findFirst($ast, function (Node $node) use($lineToFind, $majorVersion) : bool {
-            if ($majorVersion === '4') {
-                return
-                    (
-                        // match method or static call
-                        ($node instanceof Identifier && $node->name === 'assertGolden')
-                        ||
-                        // match function call
-                        ($node instanceof Name && $node->getParts()[0] === 'assertGolden')
-                    )
-                    && $node->getStartLine() === $lineToFind
-                    && $node->getEndLine() === $lineToFind;
-            }
-            return
-                ($node instanceof Identifier || $node instanceof Name)
-                && $node->name === 'assertGolden'
-                && $node->getStartLine() === $lineToFind
-                && $node->getEndLine() === $lineToFind;
-        });
-        assert($node !== null);
-
-        /** @var Node $argumentNode */
-        $argumentNode = $node->getAttribute('next');
-
+        // create insertion in context of current process id, so that each process writes only its own insertions
         self::$insertions[self::getProcessId()][] = new self(
             $filePath,
-            $argumentNode->getStartFilePos(),
-            $argumentNode->getEndFilePos(),
+            $nullArgumentNode->getStartFilePos(),
+            $nullArgumentNode->getEndFilePos(),
             $lineToFind,
             $replacement
         );
@@ -110,7 +63,7 @@ final class Insertion
         // only write and reset insertions from this process
         // (every forked process will have and execute the registered shutdown function)
         $insertions = self::$insertions[self::getProcessId()] ?? [];
-        self::$insertions[posix_getpid()] = [];
+        self::$insertions[self::getProcessId()] = [];
 
         if (empty($insertions)) {
             return;
@@ -223,4 +176,91 @@ final class Insertion
     {
         return getmypid();
     }
+
+    private static function fixLineToFindForPhp81($filePath, $lineToFind): int
+    {
+        // in php 8.1 and lower debug_backtrace reports the line of the last argument of the assertGolden call,
+        // so we need to find the line of the call
+        // (see: https://3v4l.org/Q4aji)
+        $lines = file($filePath);
+        while (! str_contains($lines[$lineToFind], 'assertGolden')) {
+            $lineToFind--;
+        }
+        // convert to 1-based line-numbers
+        $lineToFind += 1;
+        return $lineToFind;
+    }
+
+    private static function getNullArgumentNode($filePath, $lineToFind): Node
+    {
+        $chunks = explode('.', InstalledVersions::getVersion('nikic/php-parser'));
+        $majorVersion = $chunks[0];
+        if ($majorVersion === '4') {
+            return self::getNullArgumentNodeParserV4($filePath, $lineToFind);
+        }
+        return self::getNullArgumentNodeParserV5($filePath, $lineToFind);
+    }
+
+    private static function getNullArgumentNodeParserV4($filePath, $lineToFind): Node
+    {
+        $parser = (new ParserFactory())->create(
+            ParserFactory::PREFER_PHP7,
+            new Emulative(['usedAttributes' => ['startLine', 'endLine', 'startFilePos', 'endFilePos']])
+        );
+        $fileContent = file_get_contents($filePath);
+        $ast = $parser->parse($fileContent);
+
+        // see: https://github.com/nikic/PHP-Parser/blob/4.x/doc/component/FAQ.markdown
+        $traverser = new NodeTraverser;
+        $traverser->addVisitor(new NodeConnectingVisitor);
+        $traverser->traverse($ast);
+
+        $nodeFinder = new NodeFinder();
+        $node = $nodeFinder->findFirst($ast, function (Node $node) use($lineToFind) : bool {
+            return
+                (
+                    // match method or static call
+                    ($node instanceof Identifier && $node->name === 'assertGolden')
+                    ||
+                    // match function call
+                    ($node instanceof Name && $node->getParts()[0] === 'assertGolden')
+                )
+                && $node->getStartLine() === $lineToFind
+                && $node->getEndLine() === $lineToFind;
+        });
+        assert($node !== null);
+
+        /** @var Node $argumentNode */
+        $argumentNode = $node->getAttribute('next');
+
+        return $argumentNode;
+    }
+
+    private static function getNullArgumentNodeParserV5($filePath, $lineToFind): Node
+    {
+        $parser = (new ParserFactory())->createForHostVersion();
+        $fileContent = file_get_contents($filePath);
+        $ast = $parser->parse($fileContent);
+
+        // see: https://github.com/nikic/PHP-Parser/blob/master/doc/component/FAQ.markdown
+        (new NodeTraverser(new NodeConnectingVisitor))->traverse($ast);
+
+        $nodeFinder = new NodeFinder();
+        $node = $nodeFinder->findFirst($ast, function (Node $node) use($lineToFind) : bool {
+            return
+                ($node instanceof Identifier || $node instanceof Name)
+                && $node->name === 'assertGolden'
+                && $node->getStartLine() === $lineToFind
+                && $node->getEndLine() === $lineToFind;
+        });
+        assert($node !== null);
+
+        /** @var Node $argumentNode */
+        $argumentNode = $node->getAttribute('next');
+
+        return $argumentNode;
+    }
+
+
+
 }
