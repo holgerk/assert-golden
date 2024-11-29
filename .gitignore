@@ -4,3 +4,4 @@ vendor
 composer.lock
 .phpunit.cache
 tests/cases/*.test.php
+tests/cases/*.golden.php

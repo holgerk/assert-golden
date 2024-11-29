@@ -14,5 +14,6 @@ class StaticCall
             null,
             ['a' => 1, 'b' => 2]
         );
+        self::assertGoldenFile(['a' => 1, 'b' => 2]);
     }
 }

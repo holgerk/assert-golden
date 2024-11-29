@@ -17,5 +17,6 @@ class MethodCall
             ],
             ['a' => 1, 'b' => 2]
         );
+        $this->assertGoldenFile(['a' => 1, 'b' => 2]);
     }
 }

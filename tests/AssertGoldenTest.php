@@ -3,13 +3,17 @@
 namespace Holgerk\AssertGolden\Tests;
 
 use Holgerk\AssertGolden\Insertion;
-use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use function Holgerk\AssertGolden\assertGolden;
 
 class AssertGoldenTest extends TestCase
 {
+    public function setUp(): void
+    {
+        foreach (glob(__DIR__ . '/cases/*.golden.php') as $goldenFile) {
+            unlink($goldenFile);
+        }
+    }
+
     public static function casesDataProvider(): array
     {
         return [
@@ -38,5 +42,10 @@ class AssertGoldenTest extends TestCase
         Insertion::writeAndResetInsertions();
 
         self::assertFileEquals($expectedFile, $testFile);
+
+        // they all generate the same golden file
+        $goldenFile = $dir . '/' . $case . '.test_test.golden.php';
+        self::assertFileEquals($dir . '/golden.expected.php', $goldenFile);
     }
+
 }

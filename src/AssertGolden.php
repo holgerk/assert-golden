@@ -12,4 +12,9 @@ trait AssertGolden
     {
         _internalAssertGolden($expected, $actual, $message);
     }
+
+    public static function assertGoldenFile(mixed $actual, string $message = ''): void
+    {
+        _internalAssertGoldenFile($actual, $message);
+    }
 }
