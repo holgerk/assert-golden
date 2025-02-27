@@ -5,7 +5,7 @@ namespace Holgerk\AssertGolden;
 use PHPUnit\Framework\Assert;
 use Symfony\Component\VarExporter\VarExporter;
 
-$index = array_search('--update-golden', $_SERVER['argv'] ?? '', true);
+$index = array_search('--update-golden', $_SERVER['argv'] ?? [], true);
 if ($index !== false) {
     Insertion::$forceUpdateGolden = true;
 
