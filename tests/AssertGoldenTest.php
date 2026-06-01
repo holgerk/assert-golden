@@ -3,6 +3,8 @@
 namespace Holgerk\AssertGolden\Tests;
 
 use Holgerk\AssertGolden\Insertion;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class AssertGoldenTest extends TestCase
@@ -23,11 +25,9 @@ class AssertGoldenTest extends TestCase
         ];
     }
 
-    /**
-     * @test
-     * @dataProvider casesDataProvider
-     */
-    public function file_is_changed(string $case): void
+    #[Test]
+    #[DataProvider('casesDataProvider')]
+    public function test_file_is_changed(string $case): void
     {
         $dir = __DIR__ . '/cases';
         $beforeFile = $dir . '/' . $case . '.before.php';
